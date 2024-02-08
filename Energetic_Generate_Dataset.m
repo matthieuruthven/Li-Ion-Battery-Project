@@ -1,4 +1,4 @@
-function Energetic_Generate_Dataset(sim_type, C_rate, dirpath)
+function Energetic_Generate_Dataset(sim_type, C_rate, k, h, dirpath)
 % Energetic_Generate_Dataset.m
 % Function to generate dataset of synthetic thermal images using
 % computational model developed by Lin et al. (2022)
@@ -13,7 +13,7 @@ function Energetic_Generate_Dataset(sim_type, C_rate, dirpath)
 % saved
 
 % Author: Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modified: 7th February 2024
+% Last modified: 8th February 2024
 
 % Start timing
 tic
@@ -36,8 +36,8 @@ x = x0;
 % Code source: https://github.com/Battery-Intelligence-Lab/multiscale-coupling/blob/dba3649f2eeb4228d2849e4d4e748c91ed6ad7a4/ObjFunc.m#L5C1-L17C48
 tf          = sim_time(floor(C_rate));       % Total simulation time 
 Cp          = x(1)*1e3;   % Specific heat
-k           = x(2);       % Thermal conductivity
-h           = x(3);       % Heat transfer coefficient   
+% k           = x(2);       % Thermal conductivity
+% h           = x(3);       % Heat transfer coefficient   
 ku          = x(4);       % OCP gradient
 kappa       = x(5);       % Ionic conductivity
 alfa_ka     = x(6);       % Temperature coefficient of kappa

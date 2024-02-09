@@ -9,7 +9,7 @@ function out = Battery_model_energetic(sim_type,C_rate,dirpath,tf,T0,Cpel,keff,h
 % https://github.com/Battery-Intelligence-Lab/multiscale-coupling)
 % 
 % Function adapted by Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modification made on 7th February 2024
+% Last modification made on 9th February 2024
 
 import com.comsol.model.*
 import com.comsol.model.util.*
@@ -998,27 +998,35 @@ model.result.export('plot3').run;
 % Read TXT file
 SOC_vs_t = readmatrix(fullfile(dirpath, 'Average_Electrode_SOC.txt'));
 
-if strcmp(sim_type, 'Charge')
-    % Extract negative electrode SOCs
-    neg_SOC_vs_t = SOC_vs_t(1:(size(SOC_vs_t, 1) / 2), :);
+% Extract negative electrode SOCs
+neg_SOC_vs_t = SOC_vs_t(1:(size(SOC_vs_t, 1) / 2), :);
 
-    % Find maximum time at which SOC > 0
+% Extract positive electrode SOCs
+pos_SOC_vs_t = SOC_vs_t((size(SOC_vs_t, 1) / 2 + 1):end, :);
+
+% Find simulation end point
+if strcmp(sim_type, 'Charge')
+    
+    % Find maximum time at which SOC of negative electrode > 0
     neg_max_t = find(neg_SOC_vs_t(:, 2) > 0, 1, 'last');
 
-    % Extract positive electrode SOCs
-    pos_SOC_vs_t = SOC_vs_t((size(SOC_vs_t, 1) / 2 + 1):end, :);
-
-    % Find maximum time at which SOC < 1
-    pos_max_t = find(pos_SOC_vs_t(:, 2) < 1, 1, 'last');
+    % Find maximum time at which SOC of positive electrode < 0.90
+    pos_max_t = find(pos_SOC_vs_t(:, 2) < 0.90, 1, 'last');
 
     % Find minimum
     max_t = min(neg_max_t, pos_max_t);
-else
-    % Extract positive electrode SOCs
-    SOC_vs_t = SOC_vs_t((size(SOC_vs_t, 1) / 2 + 1):end, :);
 
-    % Find maximum time at which SOC > 0
-    max_t = find(SOC_vs_t(:, 2) > 0, 1, 'last');
+else
+
+    % Find maximum time at which SOC of negative electrode < 0.98
+    neg_max_t = find(neg_SOC_vs_t(:, 2) < 0.98, 1, 'last');
+
+    % Find maximum time at which SOC of positive electrode > 0.01
+    pos_max_t = find(pos_SOC_vs_t(:, 2) > 0.01, 1, 'last');
+
+    % Find minimum
+    max_t = min(neg_max_t, pos_max_t);
+
 end
 
 % Export RGB images

@@ -1,4 +1,18 @@
 function surface_t_array = txt_to_array(dirpath, idx)
+    % Function to read TXT files of pouch cell surface temperature values
+    % (and corresponding coordinates), arrange these as an array and then
+    % save the array as a MAT file
+    %
+    % Author: Matthieu Ruthven (matthieu.ruthven@uni.lu)
+    % Last modified: 9th February 2024
+    %
+    % Input arguments:
+    % 1) dirpath (string): path to folder containing data from battery surface
+    % temperature simulation
+    % 2) idx (integer): the simulation time point
+    %
+    % Output:
+    % 1) MAT file of surface temperature values
 
     % Read TXT files of temperature data
     b_body = readmatrix(fullfile(dirpath, 'Raw_Surface_T', sprintf('Surface_T_Battery_%04d.txt', idx)));
@@ -111,7 +125,7 @@ function surface_t_array = txt_to_array(dirpath, idx)
     neg_tab = rot90(neg_tab, 2);
     
     % Plot image
-    imagesc(neg_tab); axis image off
+    % imagesc(neg_tab); axis image off
     
     % For positive tab
     
@@ -146,7 +160,7 @@ function surface_t_array = txt_to_array(dirpath, idx)
     pos_tab = rot90(pos_tab, 2);
     
     % Plot image
-    imagesc(pos_tab); axis image off
+    % imagesc(pos_tab); axis image off
     
     % Dimensions of battery body and tabs
     [b_body_l, b_body_w] = size(b_body);

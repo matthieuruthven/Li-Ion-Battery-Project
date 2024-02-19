@@ -1,4 +1,4 @@
-function out = Battery_model_energetic(sim_type,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0)
+function out = Battery_model_energetic(sim_type,sq_wave_period,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0)
 %
 % Battery_model_energetic.m
 % 
@@ -9,7 +9,7 @@ function out = Battery_model_energetic(sim_type,C_rate,dirpath,tf,T0,Cpel,keff,h
 % https://github.com/Battery-Intelligence-Lab/multiscale-coupling)
 % 
 % Function adapted by Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modification made on 9th February 2024
+% Last modification made on 19th February 2024
 
 import com.comsol.model.*
 import com.comsol.model.util.*
@@ -66,6 +66,8 @@ model.param.set('alfa_ka', [num2str(alfa_ka) '[S/m/K]'], 'Temperature coefficien
 model.param.set('i0ref', [num2str(i0ref) '[A/m^2]'], 'Exch current dens at T0');
 model.param.set('Ei0', [num2str(Ei0) '[kJ/mol]'], 'Temp dependence of i0');
 model.param.set('Ds', [num2str(Ds) '[m^2/s]'], 'Diffusion coefficient');
+model.param.set('sq_wave_period', [num2str(sq_wave_period) '[s]'], 'Period of square wave');
+model.param.set('sim_time', [num2str(tf) '[s]'], 'Duration of simulation');
 
 % Save battery model parameters
 model.param.saveFile(fullfile(dirpath, 'Model_Parameter_Values.txt'));
@@ -84,7 +86,7 @@ model.func('wv1').set('freq', '2*pi*.01');
 if strcmp(sim_type, 'Charge')
     model.func('wv1').set('amplitude', -1);
 end
-model.func('wv1').set('period', tf);
+model.func('wv1').set('period', num2str(sq_wave_period));
 
 model.component('comp1').mesh.create('mesh1');
 model.component('comp1').mesh.create('mesh2');
@@ -692,10 +694,10 @@ model.result.export.create('tbl1', 'Table');
 model.result.export.create('plot1', 'Plot');
 model.result.export.create('anim1', 'Animation');
 
-model.study('std1').feature('time').set('tlist', sprintf('range(0,1,%d)', round(tf / 2)));
+model.study('std1').feature('time').set('tlist', sprintf('range(0,1,%d)', tf));
 
 model.sol('sol1').attach('std1');
-model.sol('sol1').feature('v1').set('clist', {sprintf('range(0,1,%d)', round(tf /2)) '2.5[s]'});
+model.sol('sol1').feature('v1').set('clist', {sprintf('range(0,1,%d)', tf) '2.5[s]'});
 model.sol('sol1').feature('v1').feature('comp1_cl').set('scalemethod', 'manual');
 model.sol('sol1').feature('v1').feature('comp1_cl').set('scaleval', 1000);
 model.sol('sol1').feature('v1').feature('comp1_liion_pce1_cs').set('scalemethod', 'manual');
@@ -708,7 +710,7 @@ model.sol('sol1').feature('v1').feature('comp1_phis').set('scalemethod', 'manual
 model.sol('sol1').feature('v1').feature('comp1_phis').set('scaleval', 1);
 model.sol('sol1').feature('v1').feature('comp1_liion_ec1_phis0').set('scalemethod', 'manual');
 model.sol('sol1').feature('v1').feature('comp1_liion_ec1_phis0').set('scaleval', 1);
-model.sol('sol1').feature('t1').set('tlist', sprintf('range(0,1,%d)', round(tf / 2)));
+model.sol('sol1').feature('t1').set('tlist', sprintf('range(0,1,%d)', tf));
 model.sol('sol1').feature('t1').set('rtol', 0.001);
 model.sol('sol1').feature('t1').set('maxorder', 2);
 model.sol('sol1').feature('t1').set('estrat', 'exclude');
@@ -1016,7 +1018,7 @@ if strcmp(sim_type, 'Charge')
     % Find minimum
     max_t = min(neg_max_t, pos_max_t);
 
-else
+elseif strcmp(sim_type, 'Discharge')
 
     % Find maximum time at which SOC of negative electrode < 0.98
     neg_max_t = find(neg_SOC_vs_t(:, 2) < 0.98, 1, 'last');
@@ -1026,6 +1028,10 @@ else
 
     % Find minimum
     max_t = min(neg_max_t, pos_max_t);
+
+else
+
+    max_t = tf + 1;
 
 end
 

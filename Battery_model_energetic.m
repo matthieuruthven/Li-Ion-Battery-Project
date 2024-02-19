@@ -1,4 +1,4 @@
-function out = Battery_model_energetic(sim_type,sq_wave_period,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0)
+function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0)
 %
 % Battery_model_energetic.m
 % 
@@ -67,6 +67,7 @@ model.param.set('i0ref', [num2str(i0ref) '[A/m^2]'], 'Exch current dens at T0');
 model.param.set('Ei0', [num2str(Ei0) '[kJ/mol]'], 'Temp dependence of i0');
 model.param.set('Ds', [num2str(Ds) '[m^2/s]'], 'Diffusion coefficient');
 model.param.set('sq_wave_period', [num2str(sq_wave_period) '[s]'], 'Period of square wave');
+model.param.set('img_syn_int', [num2str(img_syn_int) '[s]'], 'Time interval between synthesis of consecutive images');
 model.param.set('sim_time', [num2str(tf) '[s]'], 'Duration of simulation');
 
 % Save battery model parameters
@@ -694,10 +695,10 @@ model.result.export.create('tbl1', 'Table');
 model.result.export.create('plot1', 'Plot');
 model.result.export.create('anim1', 'Animation');
 
-model.study('std1').feature('time').set('tlist', sprintf('range(0,1,%d)', tf));
+model.study('std1').feature('time').set('tlist', sprintf('range(0,%d,%d)', img_syn_int, tf));
 
 model.sol('sol1').attach('std1');
-model.sol('sol1').feature('v1').set('clist', {sprintf('range(0,1,%d)', tf) '2.5[s]'});
+model.sol('sol1').feature('v1').set('clist', {sprintf('range(0,%d,%d)', img_syn_int, tf) '2.5[s]'});
 model.sol('sol1').feature('v1').feature('comp1_cl').set('scalemethod', 'manual');
 model.sol('sol1').feature('v1').feature('comp1_cl').set('scaleval', 1000);
 model.sol('sol1').feature('v1').feature('comp1_liion_pce1_cs').set('scalemethod', 'manual');
@@ -710,7 +711,7 @@ model.sol('sol1').feature('v1').feature('comp1_phis').set('scalemethod', 'manual
 model.sol('sol1').feature('v1').feature('comp1_phis').set('scaleval', 1);
 model.sol('sol1').feature('v1').feature('comp1_liion_ec1_phis0').set('scalemethod', 'manual');
 model.sol('sol1').feature('v1').feature('comp1_liion_ec1_phis0').set('scaleval', 1);
-model.sol('sol1').feature('t1').set('tlist', sprintf('range(0,1,%d)', tf));
+model.sol('sol1').feature('t1').set('tlist', sprintf('range(0,%d,%d)', img_syn_int, tf));
 model.sol('sol1').feature('t1').set('rtol', 0.001);
 model.sol('sol1').feature('t1').set('maxorder', 2);
 model.sol('sol1').feature('t1').set('estrat', 'exclude');
@@ -1009,29 +1010,29 @@ pos_SOC_vs_t = SOC_vs_t((size(SOC_vs_t, 1) / 2 + 1):end, :);
 % Find simulation end point
 if strcmp(sim_type, 'Charge')
     
-    % Find maximum time at which SOC of negative electrode > 0
-    neg_max_t = find(neg_SOC_vs_t(:, 2) > 0, 1, 'last');
+    % Find simulation step ID at which SOC of negative electrode > 0
+    neg_step_id = find(neg_SOC_vs_t(:, 2) > 0, 1, 'last');
 
-    % Find maximum time at which SOC of positive electrode < 0.90
-    pos_max_t = find(pos_SOC_vs_t(:, 2) < 0.90, 1, 'last');
+    % Find simulation step ID at which SOC of positive electrode < 0.90
+    pos_step_id = find(pos_SOC_vs_t(:, 2) < 0.90, 1, 'last');
 
-    % Find minimum
-    max_t = min(neg_max_t, pos_max_t);
+    % Find minimum simulation step ID
+    max_step_id = min(neg_step_id, pos_step_id);
 
 elseif strcmp(sim_type, 'Discharge')
 
     % Find maximum time at which SOC of negative electrode < 0.98
-    neg_max_t = find(neg_SOC_vs_t(:, 2) < 0.98, 1, 'last');
+    neg_step_id = find(neg_SOC_vs_t(:, 2) < 0.98, 1, 'last');
 
     % Find maximum time at which SOC of positive electrode > 0.01
-    pos_max_t = find(pos_SOC_vs_t(:, 2) > 0.01, 1, 'last');
+    pos_step_id = find(pos_SOC_vs_t(:, 2) > 0.01, 1, 'last');
 
-    % Find minimum
-    max_t = min(neg_max_t, pos_max_t);
+    % Find minimum simulation step ID
+    max_step_id = min(neg_step_id, pos_step_id);
 
 else
 
-    max_t = tf + 1;
+    max_step_id = size(neg_SOC_vs_t, 1);
 
 end
 
@@ -1064,7 +1065,7 @@ model.result.export('anim2').set('plotgroup', 'pg27');
 model.result.export('anim2').set('type', 'imageseq');
 model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Surface_T_.%s', es.img_type)));
 model.result.export('anim2').set('looplevelinput', 'manualindices');
-model.result.export('anim2').set('looplevelindices', sprintf('range(1,1,%d)', max_t));
+model.result.export('anim2').set('looplevelindices', sprintf('range(1,1,%d)', max_step_id));
 % model.result.export('anim2').set('looplevelindices', '1,101,201,301,401');
 model.result.export('anim2').set('framesel', 'all');
 model.result.export('anim2').set('width', es.img_w_pix);
@@ -1078,10 +1079,10 @@ model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Sur
 model.result.export('anim2').run;
 
 % Ensure zero padding is consistent in file name
-zero_padding = numel(num2str(max_t));
+zero_padding = numel(num2str(max_step_id));
 assert(zero_padding < 5, 'Zero padding is greater than 4')
 if zero_padding ~= 4
-    for idx = 1:max_t
+    for idx = 1:max_step_id
         if zero_padding == 3
             src_filepath = fullfile(dirpath, sprintf('Surface_T_%03d.%s', idx, es.img_type));
             other_src_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%03d.%s', idx, es.img_type));
@@ -1135,7 +1136,7 @@ end
 % Export temperature distributions as TXT files
 surface_t_array = [];
 model.result.export.create('plot2', 'Plot');
-for idx = 1:max_t
+for idx = 1:max_step_id
     model.result.dataset('surf2').selection.set([6]);
     model.result('pg27').setIndex('looplevel', idx, 0);
     model.result('pg27').run;

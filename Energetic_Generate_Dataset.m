@@ -1,4 +1,4 @@
-function Energetic_Generate_Dataset(sim_type, sim_time, C_rate, k, h, dirpath, sq_wave_period)
+function Energetic_Generate_Dataset(sim_type, sim_time, C_rate, k, h, dirpath, sq_wave_period, img_syn_int)
 % Energetic_Generate_Dataset.m
 % Function to generate dataset of synthetic thermal images using
 % computational model developed by Lin et al. (2022)
@@ -19,6 +19,8 @@ function Energetic_Generate_Dataset(sim_type, sim_time, C_rate, k, h, dirpath, s
 % saved
 % sq_wave_period (integer): the duration of the square wave in seconds (only
 % relevant when the sim_type argument is 'Square')
+% img_syn_int (integer): the time interval between synthesis of
+% consecutive images
 
 % Author: Matthieu Ruthven (matthieu.ruthven@uni.lu)
 % Last modified: 19th February 2024
@@ -62,7 +64,7 @@ T0          = 23.85;      % Ambient temperature
 % Create folder in which dataset will be saved (an error will be raised if
 % the folder already exists)
 if strcmp(sim_type, 'Charge') || strcmp(sim_type, 'Discharge')
-dirpath = fullfile(dirpath, strrep(sprintf('C_rate_%.02f_T_amb_%.02f_h_%.01f_k_%.01f_%s', C_rate, T0, h, k, sim_type), '.', '_'));
+    dirpath = fullfile(dirpath, strrep(sprintf('C_rate_%.02f_T_amb_%.02f_h_%.01f_k_%.01f_%s', C_rate, T0, h, k, sim_type), '.', '_'));
 else
     dirpath = fullfile(dirpath, strrep(sprintf('C_rate_%.02f_T_amb_%.02f_h_%.01f_k_%.01f_%s_%d', C_rate, T0, h, k, sim_type, round(sq_wave_period)), '.', '_'));
 end
@@ -73,7 +75,7 @@ end
 
 % Send battery model to COMSOL server
 % Code source: https://github.com/Battery-Intelligence-Lab/multiscale-coupling/blob/dba3649f2eeb4228d2849e4d4e748c91ed6ad7a4/ObjFunc.m#L20
-out = Battery_model_energetic(sim_type,sq_wave_period,C_rate,dirpath,tf,T0,Cp,k,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,Vinit);
+out = Battery_model_energetic(sim_type,round(sq_wave_period),round(img_syn_int),C_rate,dirpath,tf,T0,Cp,k,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,Vinit);
 
 % Finish timing
 toc

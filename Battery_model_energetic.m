@@ -9,7 +9,7 @@ function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,C_rat
 % https://github.com/Battery-Intelligence-Lab/multiscale-coupling)
 % 
 % Function adapted by Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modification made on 19th February 2024
+% Last modification made on 20th February 2024
 
 import com.comsol.model.*
 import com.comsol.model.util.*
@@ -965,9 +965,6 @@ es.font_size = 9;
 % Save these values
 writestruct(es, fullfile(dirpath, 'Export_Parameter_Values.json'))
 
-model.view.create('view11', 2);
-model.view('view11').label('Positive CC');
-
 model.result.dataset.create('surf2', 'Surface');
 model.result.dataset('surf2').label('Positive CC');
 model.result.dataset('surf2').selection.set([6 10 43]);
@@ -975,10 +972,14 @@ model.result.create('pg27', 'PlotGroup2D');
 model.result('pg27').run;
 model.result('pg27').label('Positive CC Surface T');
 model.result('pg27').set('data', 'surf2');
-model.result('pg27').set('titletype', 'none');
-% model.result('pg27').set('view', 'view11');
+model.result('pg27').set('titletype', 'custom');
+model.result('pg27').set('typeintitle', false);
+model.result('pg27').set('descriptionintitle', true);
+model.result('pg27').set('unitintitle', false);
 model.result('pg27').set('edges', false);
-model.result('pg27').set('showlegends', false);
+model.result('pg27').set('showlegends', true);
+model.result('pg27').set('showlegendsmaxmin', true);
+model.result('pg27').set('showlegendsunit', true);
 model.result('pg27').create('surf1', 'Surface');
 model.result('pg27').feature('surf1').set('expr', 'T');
 model.result('pg27').feature('surf1').set('unit', 'degC');
@@ -988,7 +989,7 @@ model.result('pg27').feature('surf1').set('colortable', es.colour_table);
 % model.result('pg27').feature('surf1').set('rangecolormax', es.colour_table_max);
 model.result('pg27').run;
 
-model.view('view11').set('showgrid', false);
+model.view('view10').set('showgrid', false);
 
 % Export average state of charge (SOC) as TXT file
 model.result.export.create('plot3', 'Plot');
@@ -1036,7 +1037,7 @@ else
 
 end
 
-% Export RGB images
+% Export RGB video with labels
 model.result.export.create('anim2', 'Animation');
 model.result.export('anim2').set('fontsize', num2str(es.font_size));
 model.result.export('anim2').set('colortheme', 'globaltheme');
@@ -1050,7 +1051,7 @@ model.result.export('anim2').set('options1d', 'on');
 model.result.export('anim2').set('title2d', 'on');
 model.result.export('anim2').set('legend2d', 'on');
 model.result.export('anim2').set('logo2d', 'off');
-model.result.export('anim2').set('options2d', 'off');
+model.result.export('anim2').set('options2d', 'on');
 model.result.export('anim2').set('title3d', 'on');
 model.result.export('anim2').set('legend3d', 'on');
 model.result.export('anim2').set('logo3d', 'on');
@@ -1062,14 +1063,44 @@ model.result.export('anim2').set('axes2d', 'off');
 model.result.export('anim2').set('showgrid', 'on');
 model.result.export('anim2').label('Positive CC Surface T');
 model.result.export('anim2').set('plotgroup', 'pg27');
-model.result.export('anim2').set('type', 'imageseq');
-model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Surface_T_.%s', es.img_type)));
+model.result.export('anim2').set('type', 'movie');
+model.result.export('anim2').set('movietype', es.video_type);
+if strcmp(es.video_type, 'avi')
+    model.result.export('anim2').set('aviqual', es.avi_quality);
+end
+model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Labelled.%s', es.video_type)));
 model.result.export('anim2').set('looplevelinput', 'manualindices');
 model.result.export('anim2').set('looplevelindices', sprintf('range(1,1,%d)', max_step_id));
 % model.result.export('anim2').set('looplevelindices', '1,101,201,301,401');
 model.result.export('anim2').set('framesel', 'all');
 model.result.export('anim2').set('width', es.img_w_pix);
 model.result.export('anim2').set('height', es.img_h_pix);
+model.result.export('anim2').set('fps', es.video_fps);
+model.result.export('anim2').set('options2d', true);
+model.result.export('anim2').run;
+
+% Export greyscale video with labels
+model.result('pg27').feature('surf1').set('colortable', 'GrayScale');
+model.result('pg27').run;
+model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Labelled_Grayscale.%s', es.video_type)));
+model.result.export('anim2').run;
+
+% Export greyscale video without labels
+model.result('pg27').set('titletype', 'none');
+model.result('pg27').run;
+model.result.export('anim2').set('options2d', 'off');
+model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Unlabelled_Grayscale.%s', es.video_type)));
+model.result.export('anim2').run;
+
+% Export RGB video without labels
+model.result('pg27').feature('surf1').set('colortable', es.colour_table);
+model.result('pg27').run;
+model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Unlabelled.%s', es.video_type)));
+model.result.export('anim2').run;
+
+% Export RGB images
+model.result.export('anim2').set('type', 'imageseq');
+model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Surface_T_.%s', es.img_type)));
 model.result.export('anim2').run;
 
 % Export greyscale images (3-channel)
@@ -1108,23 +1139,6 @@ end
 %     imwrite(tmp_img, tmp_filepath)
 % end
 
-% Export greyscale video without labels
-model.result.export('anim2').set('type', 'movie');
-model.result.export('anim2').set('movietype', es.video_type);
-model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Unlabelled_Grayscale.%s', es.video_type)));
-if strcmp(es.video_type, 'avi')
-    model.result.export('anim2').set('aviqual', es.avi_quality);
-end
-model.result.export('anim2').set('fps', es.video_fps);
-model.result.export('anim2').set('looplevelinput', 'manualindices');
-model.result.export('anim2').run;
-
-% Export RGB images
-model.result('pg27').feature('surf1').set('colortable', es.colour_table);
-model.result('pg27').run;
-model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Unlabelled.%s', es.video_type)));
-model.result.export('anim2').run;
-
 % Create folder in which raw temperature distributions will be saved (an error will be raised if
 % the folder already exists)
 tmp_dirpath = fullfile(dirpath, 'Raw_Surface_T');
@@ -1159,25 +1173,5 @@ for idx = 1:max_step_id
 end
 % Save surface_t_array
 save(fullfile(dirpath, 'Surface_T.mat'), 'surface_t_array')
-
-% Export RBG video with labels
-model.result.dataset('surf2').selection.set([6 10 43]);
-model.result('pg27').set('showlegends', true);
-model.result('pg27').set('showlegendsmaxmin', true);
-model.result('pg27').set('showlegendsunit', true);
-model.result('pg27').set('titletype', 'custom');
-model.result('pg27').set('descriptionintitle', true);
-model.result('pg27').set('typeintitle', false);
-model.result('pg27').set('unitintitle', false);
-model.result('pg27').run;
-model.result.export('anim2').set('options2d', true);
-model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Labelled.%s', es.video_type)));
-model.result.export('anim2').run;
-
-% Export greyscale video with labels
-model.result('pg27').feature('surf1').set('colortable', 'GrayScale');
-model.result('pg27').run;
-model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Labelled_Grayscale.%s', es.video_type)));
-model.result.export('anim2').run;
 
 out = model;

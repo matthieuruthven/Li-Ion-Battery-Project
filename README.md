@@ -33,14 +33,14 @@ Energetic_Generate_Dataset(sim_type, sim_time, C_rate, k, h, dirpath, sq_wave_pe
 
 Where:
 
-- sim_type (string) is *Charge*, *Discharge* or *Square* to generate images of the pouch cell charging, discharging or square wave loading
-- sim_time (integer) is the duration of the simulation in seconds
-- C_rate (float) is the C-rate at which the pouch cell is (dis)charged
-- k (float) is the thermal conductivity of the pouch cell
-- h (float) is the heat transfer coefficient of the pouch cell
-- dirpath (string) is the path to the folder where the images should be saved
-- sq_wave_period (integer): the duration of the square wave in seconds (only relevant when the sim_type argument is *Square*)
-- img_syn_int (integer) is the time interval between the synthesis of consecutive images
+- **sim_type** (string) is *Charge*, *Discharge* or *Square* to generate images of the pouch cell charging, discharging or square wave loading
+- **sim_time** (integer) is the duration of the simulation in seconds
+- **C_rate** (float) is the C-rate at which the pouch cell is (dis)charged
+- **k** (float) is the thermal conductivity of the pouch cell
+- **h** (float) is the heat transfer coefficient of the pouch cell
+- **dirpath** (string) is the path to the folder where the images should be saved
+- **sq_wave_period** (integer): the period of the square wave in seconds (only relevant when the sim_type argument is *Square*)
+- **img_syn_int** (integer) is the time interval between the synthesis of consecutive images
 
 For example:
 

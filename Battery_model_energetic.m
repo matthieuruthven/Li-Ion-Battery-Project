@@ -9,7 +9,7 @@ function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,C_rat
 % https://github.com/Battery-Intelligence-Lab/multiscale-coupling)
 % 
 % Function adapted by Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modification made on 20th February 2024
+% Last modification made on 21st February 2024
 
 import com.comsol.model.*
 import com.comsol.model.util.*
@@ -48,8 +48,8 @@ model.param.set('cl0', '1.2[mol/l]', 'initial Electrolyte concentration');
 model.param.set('T0', [num2str(T0) '[degC]'], 'Ambient temperature');
 model.param.set('U0', [num2str(U0) '[V]'], 'Initial cell voltage');
 if strcmp(sim_type, 'Discharge')
-    model.param.set('x0', '0.199', 'Initial Negative Electrode SOC');
-    model.param.set('y0', '0.725', 'Initial Positive Electrode SOC');
+    model.param.set('x0', '0.199', 'Initial Negative Electrode SOC'); % Alternatively 0.03
+    model.param.set('y0', '0.725', 'Initial Positive Electrode SOC'); % Alternatively 0.90
 else
     model.param.set('x0', '0.92', 'Initial Negative Electrode SOC');
     model.param.set('y0', '0.01', 'Initial Positive Electrode SOC');
@@ -88,6 +88,21 @@ if strcmp(sim_type, 'Charge')
     model.func('wv1').set('amplitude', -1);
 end
 model.func('wv1').set('period', num2str(sq_wave_period));
+
+% Discharge-Rest-Charge cycle (NB replace 3 instances of wv1)
+% model.func.create('pw1', 'Piecewise');
+% model.func('pw1').set('arg', 't');
+% model.func('pw1').set('smooth', 'contd2');
+% model.func('pw1').setIndex('pieces', 0, 0, 0);
+% model.func('pw1').setIndex('pieces', 2500, 0, 1);
+% model.func('pw1').setIndex('pieces', 1, 0, 2);
+% model.func('pw1').setIndex('pieces', 2500, 1, 0);
+% model.func('pw1').setIndex('pieces', 4300, 1, 1);
+% model.func('pw1').setIndex('pieces', 0, 1, 2);
+% model.func('pw1').setIndex('pieces', 4300, 2, 0);
+% model.func('pw1').setIndex('pieces', 6800, 2, 1);
+% model.func('pw1').setIndex('pieces', -1, 2, 2);
+% model.func('pw1').set('argunit', 's');
 
 model.component('comp1').mesh.create('mesh1');
 model.component('comp1').mesh.create('mesh2');

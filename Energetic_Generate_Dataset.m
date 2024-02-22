@@ -23,7 +23,7 @@ function Energetic_Generate_Dataset(sim_type, sim_time, C_rate, k, h, dirpath, s
 % consecutive images
 
 % Author: Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modified: 19th February 2024
+% Last modified: 22nd February 2024
 
 % Start timing
 tic
@@ -42,8 +42,13 @@ end
 
 % Vector of battery model parameter values
 % Values are those from Table S3 in Lin et al. (2022)
-x0 = [1.0220    1.1000     12.0000     0.3500     81.0000       4.2000     6.0000     29.5000   4.5000];
+x0 = [1.0220    1.1000     12.0000     0.1800     81.0000       4.2000     6.0000     29.5000   4.5000];
 x = x0;
+% NB
+% x0(1) is 2.35 * 10^6 / 2300 [Cp in Table S3] / [electrode density]
+% x0(4) is ku 70% SOC in Table 1
+% x0(5) is 0.046 * 42^2 [kappa in Table S3] * [number of cell layers]^2
+% x0(6) is 2.4 * 10^-3 * 42^2 [alpha in Table S3] * [number of cell layers]^2
 
 % Extract battery model parameter values from vector x
 % Code source: https://github.com/Battery-Intelligence-Lab/multiscale-coupling/blob/dba3649f2eeb4228d2849e4d4e748c91ed6ad7a4/ObjFunc.m#L5C1-L17C48

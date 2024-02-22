@@ -47,7 +47,7 @@ model.param.set('Iapp', 'I_1C*C_rate', 'Applied current');
 model.param.set('cl0', '1.2[mol/l]', 'initial Electrolyte concentration');
 model.param.set('T0', [num2str(T0) '[degC]'], 'Ambient temperature');
 model.param.set('U0', [num2str(U0) '[V]'], 'Initial cell voltage');
-if strcmp(sim_type, 'Discharge')
+if strcmp(sim_type, 'Discharge') || strcmp(sim_type, 'Square')
     model.param.set('x0', '0.199', 'Initial Negative Electrode SOC'); % Alternatively 0.03
     model.param.set('y0', '0.725', 'Initial Positive Electrode SOC'); % Alternatively 0.90
 else

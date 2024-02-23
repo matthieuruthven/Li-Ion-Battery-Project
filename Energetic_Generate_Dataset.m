@@ -23,7 +23,7 @@ function Energetic_Generate_Dataset(sim_type, sim_time, C_rate, k, h, dirpath, s
 % consecutive images
 
 % Author: Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modified: 22nd February 2024
+% Last modified: 23rd February 2024
 
 % Start timing
 tic
@@ -62,7 +62,7 @@ alfa_ka     = x(6);       % Temperature coefficient of kappa
 i0ref       = x(7);       % Exchange current density
 Ei0         = x(8);       % Reaction activation energy
 Ds          = x(9)*1e-14; % Diffusion coeffcient
-DS          = -0.07;      % Entropy change
+DS          = -0.10;      % Entropy change [Entropy change 70% SOC in Table 1 / Faraday constant * 1000] NB * 1000 to convert to mV per K
 Vinit       = 3.2381;      % Initial cell voltage
 T0          = 23.85;      % Ambient temperature
 

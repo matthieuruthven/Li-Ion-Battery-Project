@@ -9,7 +9,7 @@ function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,C_rat
 % https://github.com/Battery-Intelligence-Lab/multiscale-coupling)
 % 
 % Function adapted by Matthieu Ruthven (matthieu.ruthven@uni.lu)
-% Last modification made on 21st February 2024
+% Last modification made on 1st March 2024
 
 import com.comsol.model.*
 import com.comsol.model.util.*
@@ -103,6 +103,82 @@ model.func('wv1').set('period', num2str(sq_wave_period));
 % model.func('pw1').setIndex('pieces', 6800, 2, 1);
 % model.func('pw1').setIndex('pieces', -1, 2, 2);
 % model.func('pw1').set('argunit', 's');
+
+% Define piecewise function for dEeqdT (simpler but less accurate function)
+model.component('comp1').func.create('pw1', 'Piecewise');
+model.component('comp1').func('pw1').set('funcname', 'dEeqdT_3');
+model.component('comp1').func('pw1').set('arg', 'soc');
+model.component('comp1').func('pw1').set('extrap', 'none');
+model.component('comp1').func('pw1').set('smooth', 'contd2');
+model.component('comp1').func('pw1').setIndex('pieces', 0, 0, 0);
+model.component('comp1').func('pw1').setIndex('pieces', 0.343, 0, 1);
+model.component('comp1').func('pw1').setIndex('pieces', '1.2443*soc-0.3589', 0, 2);
+model.component('comp1').func('pw1').setIndex('pieces', 0.343, 1, 0);
+model.component('comp1').func('pw1').setIndex('pieces', 0.672, 1, 1);
+model.component('comp1').func('pw1').setIndex('pieces', '0.1556*soc+0.0145', 1, 2);
+model.component('comp1').func('pw1').setIndex('pieces', 0.6, 2, 0);
+model.component('comp1').func('pw1').setIndex('pieces', 0.672, 2, 0);
+model.component('comp1').func('pw1').setIndex('pieces', 1, 2, 1);
+model.component('comp1').func('pw1').setIndex('pieces', '0.1408*soc-0.1055', 2, 2);
+model.component('comp1').func('pw1').set('fununit', 'mV/K');
+
+% Define piecewise function for dEeqdT (more complex but more accurate 
+% function)
+% model.component('comp1').func.create('pw2', 'Piecewise');
+% model.component('comp1').func('pw2').set('funcname', 'dEeqdT_5');
+% model.component('comp1').func('pw2').set('arg', 'soc');
+% model.component('comp1').func('pw2').set('extrap', 'none');
+% model.component('comp1').func('pw2').set('smooth', 'contd2');
+% model.component('comp1').func('pw2').setIndex('pieces', 0, 0, 0);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.257, 0, 1);
+% model.component('comp1').func('pw2').setIndex('pieces', '-5.4645*soc^2+2.5584*soc-0.3967', 0, 2);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.257, 1, 0);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.325, 1, 1);
+% model.component('comp1').func('pw2').setIndex('pieces', '2.4406*soc-0.7283', 1, 2);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.325, 2, 0);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.639, 2, 1);
+% model.component('comp1').func('pw2').setIndex('pieces', '0.1556*soc+0.0145', 2, 2);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.639, 3, 0);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.704, 3, 1);
+% model.component('comp1').func('pw2').setIndex('pieces', '-1.8384*soc+1.2884', 3, 2);
+% model.component('comp1').func('pw2').setIndex('pieces', 0.704, 4, 0);
+% model.component('comp1').func('pw2').setIndex('pieces', 1, 4, 1);
+% model.component('comp1').func('pw2').setIndex('pieces', '0.1408*soc-0.1055', 4, 2);
+% model.component('comp1').func('pw2').set('fununit', 'mV/K');
+
+if strcmp(sim_type, 'Discharge')
+    % Define piecewise function for Eeq (positive electrode, discharge)
+    model.component('comp1').func.create('pw3', 'Piecewise');
+    model.component('comp1').func('pw3').set('funcname', 'Eeq_discharge_pos');
+    model.component('comp1').func('pw3').set('arg', 'soc');
+    model.component('comp1').func('pw3').set('extrap', 'none');
+    model.component('comp1').func('pw3').set('smooth', 'contd2');
+    model.component('comp1').func('pw3').setIndex('pieces', 0, 0, 0);
+    model.component('comp1').func('pw3').setIndex('pieces', 0.0784, 0, 1);
+    model.component('comp1').func('pw3').setIndex('pieces', '6.1775*soc+2.1743', 0, 2);
+    model.component('comp1').func('pw3').setIndex('pieces', 0.0784, 1, 0);
+    model.component('comp1').func('pw3').setIndex('pieces', 0.9872, 1, 1);
+    model.component('comp1').func('pw3').setIndex('pieces', '0.1641*soc+3.1858', 1, 2);
+    model.component('comp1').func('pw3').setIndex('pieces', 0.9872, 2, 0);
+    model.component('comp1').func('pw3').setIndex('pieces', 1, 2, 1);
+    model.component('comp1').func('pw3').setIndex('pieces', '11.197*soc-7.7056', 2, 2);
+elseif strcmp(sim_type, 'Charge')
+    % Define piecewise function for Eeq (positive electrode, charge)
+    model.component('comp1').func.create('pw4', 'Piecewise');
+    model.component('comp1').func('pw4').set('funcname', 'Eeq_charge_pos');
+    model.component('comp1').func('pw4').set('arg', 'soc');
+    model.component('comp1').func('pw4').set('extrap', 'none');
+    model.component('comp1').func('pw4').set('smooth', 'contd2');
+    model.component('comp1').func('pw4').setIndex('pieces', 0, 0, 0);
+    model.component('comp1').func('pw4').setIndex('pieces', 0.0769, 0, 1);
+    model.component('comp1').func('pw4').setIndex('pieces', '6.6269*soc+2.7533', 0, 2);
+    model.component('comp1').func('pw4').setIndex('pieces', 0.0769, 1, 0);
+    model.component('comp1').func('pw4').setIndex('pieces', 0.9822, 1, 1);
+    model.component('comp1').func('pw4').setIndex('pieces', '0.1276*soc+3.2531', 1, 2);
+    model.component('comp1').func('pw4').setIndex('pieces', 0.9822, 2, 0);
+    model.component('comp1').func('pw4').setIndex('pieces', 1, 2, 1);
+    model.component('comp1').func('pw4').setIndex('pieces', '6.906*soc-3.4044', 2, 2);
+end
 
 model.component('comp1').mesh.create('mesh1');
 model.component('comp1').mesh.create('mesh2');
@@ -378,7 +454,8 @@ model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').se
 model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('dEeqdT', '');
 model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('cEeqref', '');
 model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('Eeq', '-ku*(soc-x0)-0.02*wv1(root.t[1/s])');
-model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('dEeqdT', [num2str(-DS) '[mV/K]']);
+% model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('dEeqdT', [num2str(-DS) '[mV/K]']);
+model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('dEeqdT', {'-dEeqdT_3(soc)'});
 model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('cEeqref', '29612[mol/m^3]');
 model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').set('soc', 'c/cEeqref');
 model.component('comp1').material('mat3').propertyGroup('ElectrodePotential').addInput('concentration');
@@ -401,8 +478,15 @@ model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').se
 model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('Eeq', '');
 model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('dEeqdT', '');
 model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('cEeqref', '');
-model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('Eeq', 'U0-ku*(soc-y0)+0.02*wv1(root.t[1/s])'); 
-model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('dEeqdT', [num2str(DS) '[mV/K]']);
+if strcmp(sim_type, 'Discharge')
+    model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('Eeq', {'Eeq_discharge_pos(soc)'});
+elseif strcmp(sim_type, 'Charge')
+    model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('Eeq', {'Eeq_charge_pos(soc)'});
+else
+    model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('Eeq', 'U0-ku*(soc-y0)+0.02*wv1(root.t[1/s])');
+end
+% model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('dEeqdT', [num2str(DS) '[mV/K]']);
+model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('dEeqdT', {'dEeqdT_3(soc)'});
 model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('cEeqref', '16921[mol/m^3]');
 model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('soc', 'c/cEeqref');
 model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').addInput('concentration');
@@ -621,6 +705,42 @@ model.component('comp1').physics('ht').feature('solid6').set('minput_strainrefer
 model.component('comp1').physics('ht').feature('solid4').set('k_mat', 'userdef');
 model.component('comp1').physics('ht').feature('solid4').set('rho_mat', 'userdef');
 model.component('comp1').physics('ht').feature('solid4').set('Cp_mat', 'userdef');
+
+% % To change battery to Energetic battery
+% % Remove geometry that is not required
+% model.component('comp1').geom('geom1').feature.remove('arr1');
+% model.component('comp1').geom('geom1').feature.remove('blk4');
+% model.component('comp1').geom('geom1').feature.remove('blk3');
+% model.component('comp1').geom('geom1').feature.remove('wp2');
+% model.component('comp1').geom('geom1').feature.remove('wp3');
+% model.component('comp1').geom('geom1').feature.remove('ext2');
+% model.component('comp1').geom('geom1').run('fin');
+% % Remove material that is not required
+% model.component('comp1').material.remove('mat6');
+% % Remove parameters that are not required and update other parameters
+% model.param.remove('H_bar');
+% model.param.remove('L_bar');
+% model.param.set('I_1C', 'Q_cell/1[h]/W_tab/L_tab');
+% model.param.set('W_cell', '102 [mm]');
+% model.param.set('H_cell', '309 [mm]');
+% model.param.set('L_tab', '0.35 [mm]');
+% model.param.set('H_tab', '31.5 [mm]');
+% model.param.set('W_tab', '45 [mm]');
+% model.param.set('Itab', '10.5 [mm]');
+% model.param.set('U0', '3.65[V]');
+% model.param.set('Q_cell', '40[Ah]');
+% % Remove components that are not required
+% model.component('comp1').selection.remove('sel12');
+% model.component('comp1').selection('sel9').set([8]);
+% model.component('comp1').selection('sel8').set([34]);
+% % Modify battery configuration
+% model.component('comp1').geom('geom1').feature('blk2').setIndex('pos', '-H_tab', 2);
+% model.component('comp1').geom('geom1').run('blk2');
+% model.component('comp1').geom('geom1').feature('blk2').setIndex('pos', 'Itab', 1);
+% model.component('comp1').geom('geom1').run('blk2');
+% model.component('comp1').geom('geom1').run;
+% model.component('comp1').physics('liion').feature('egnd1').selection.set([34]);
+% model.component('comp1').geom('geom1').run('fin');
 
 model.study.create('std1');
 model.study('std1').create('time', 'Transient');

@@ -90,7 +90,7 @@ function surface_t_array = txt_to_array(dirpath, idx)
     b_body = rot90(b_body, 2);
     
     % Plot image
-    imagesc(b_body); axis image off
+    % imagesc(b_body); axis image off
     
     % For negative tab
     

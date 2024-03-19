@@ -28,24 +28,29 @@ git clone https://github.com/matthieuruthven/Li-Ion-Battery-Project.git
 3. Run the `Energetic_Generate_Dataset` function in MATLAB.
 
 ```
-Energetic_Generate_Dataset(sim_type, sim_time, C_rate, k, h, dirpath, sq_wave_period, img_syn_int)
+Energetic_Generate_Dataset(sim_type, sim_time, batt_type, anomaly, C_rate, k_in, h_in, T0_in, dirpath, sq_wave_period, img_syn_int, SOC, def_or_cus)
 ```
 
 Where:
 
-- **sim_type** (string) is *Charge*, *Discharge* or *Square* to generate images of the pouch cell charging, discharging or square wave loading
+- **sim_type** (string) is *Charge*, *Discharge* or *Square* to generate images of the surface temperature of the pouch cell while it is charging, discharging or cycled using a square wave
 - **sim_time** (integer) is the duration of the simulation in seconds
+- **batt_type** (string) is either *Energetic* or *Lin* to indicate whether simulations using the Energetic or original pouch cell should be performed
+- **anomaly** (string) is either *None*, *Circle*, *Stripe_H* or *Stripe_W* to indicate the spatial anomaly in the battery thermal conductivity
 - **C_rate** (float) is the C-rate at which the pouch cell is (dis)charged
-- **k** (float) is the thermal conductivity of the pouch cell
-- **h** (float) is the heat transfer coefficient of the pouch cell
+- **k_in** (float) is the thermal conductivity, *k*, of the pouch cell in W/m/K
+- **h_in** (float) is the heat transfer coefficient, *h*, of the pouch cell in W/m<sup>2</sup>/K
+- **T0_in** (float) is the initial temperature, *T<sub>0</sub>*, of the pouch cell in &deg;C
 - **dirpath** (string) is the path to the folder where the images should be saved
-- **sq_wave_period** (integer): the period of the square wave in seconds (only relevant when the sim_type argument is *Square*)
-- **img_syn_int** (integer) is the time interval between the synthesis of consecutive images
+- **sq_wave_period** (integer) is the period of the square wave in seconds (NB this argument is only relevant when the **sim_type** argument is *Square* and its value is overridden when the **sim_type** argument is *Charge* or *Discharge*)
+- **img_syn_int** (integer) is the time interval in seconds between the synthesis of consecutive images
+- **SOC** (float) is the initial state of charge (SOC) of the pouch cell (0 $\leq$ SOC $\leq$ 1)
+- **def_or_cus** (string) is either *custom* or *default* to indicate if custom values of *k*, *h* and *T<sub>0</sub>* should be used or the default values (NB in the latter case, the values of the **k_in**, **h_in** and **T0_in** arguments will be overriden)
 
 For example:
 
 ```
-Energetic_Generate_Dataset('Charge', 2000, 4, 1.1, 12, 'C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project', 4000, 10)
+Energetic_Generate_Dataset('Square', 2500, 'Lin', 'None', 4, 1, 1, 1, 'C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project', 100, 1, 0.3, 'default')
 ```
 
-would simulate the charging of a pouch cell at a C-rate = 4 for 2000 seconds and generate sythetic images of the surface of the pouch cell every 10 seconds and save these images in a folder with path 'C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project\C_rate_4_00_T_amb_23_85_h_12_0_k_1_1_Charge'
+would simulate the square wave cycling of the Lin *et al.* (2022) pouch cell at a C-rate of 4 for 2500 seconds and then generate sythetic images of the surface temperature of the pouch cell every second and save these images in a folder with path *C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project\Lin_C_rate_4_00_T_amb_23_85_h_12_0_k_1_1_Square_SOC_0_3*. The initial SOC of the pouch cell would be 30% and the default values of *k*, *h* and *T<sub>0</sub>* would be used in the simulation. The *k* of the pouch cell would not include any spatial anomaly.

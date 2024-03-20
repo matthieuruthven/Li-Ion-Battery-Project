@@ -1,15 +1,16 @@
-function surface_t_array = txt_to_array(dirpath, idx)
+function surface_t_array = txt_to_array(dirpath, idx, batt_type)
     % Function to read TXT files of pouch cell surface temperature values
     % (and corresponding coordinates), arrange these as an array and then
     % save the array as a MAT file
     %
     % Author: Matthieu Ruthven (matthieu.ruthven@uni.lu)
-    % Last modified: 9th February 2024
+    % Last modified: 20th March 2024
     %
     % Input arguments:
     % 1) dirpath (string): path to folder containing data from battery surface
     % temperature simulation
     % 2) idx (integer): the simulation time point
+    % 3) batt_type (string): the type of battery (either 'Lin' or 'Energetic')
     %
     % Output:
     % 1) MAT file of surface temperature values
@@ -20,7 +21,7 @@ function surface_t_array = txt_to_array(dirpath, idx)
     pos_tab = readmatrix(fullfile(dirpath, 'Raw_Surface_T', sprintf('Surface_T_Pos_Tab_%04d.txt', idx)));
     
     % Read TXT file of model parameter values
-    S = readlines(fullfile(dirpath, 'Model_Parameter_values.txt'));
+    S = readlines(fullfile(dirpath, 'Model_Parameter_Values.txt'));
 
     % Extract relevant information from TXT file of model parameter values
     for tmp_string = S'
@@ -87,7 +88,6 @@ function surface_t_array = txt_to_array(dirpath, idx)
     
     % Interpolate 2D scattered data
     b_body = griddata(x_coords, y_coords, T_vals, xq, yq, "nearest");
-    b_body = rot90(b_body, 2);
     
     % Plot image
     % imagesc(b_body); axis image off
@@ -111,18 +111,17 @@ function surface_t_array = txt_to_array(dirpath, idx)
     
     % Check consistency of coordinates
     if xmax < 0
-        assert(abs(round(xmin - xmax)) == b_tab_w, 'Inconsistency in negative tab width')
+        assert(abs(round(xmin - xmax, 1)) == b_tab_w, 'Inconsistency in negative tab width')
     else
-        assert(round(xmax - xmin) == b_tab_w, 'Inconsistency in negative tab width')
+        assert(round(xmax - xmin, 1) == b_tab_w, 'Inconsistency in negative tab width')
     end
-    assert(round(ymax - ymin) == b_tab_l, 'Inconsistency in negative tab length')
+    assert(round(ymax - ymin, 1) == b_tab_l, 'Inconsistency in negative tab length')
     
     % Create mesh grid
     [xq, yq] = meshgrid(round(xmin):round(xmax), round(ymin):round(ymax));
     
     % Interpolate 2D scattered data
     neg_tab = griddata(x_coords, y_coords, T_vals, xq, yq, "nearest");
-    neg_tab = rot90(neg_tab, 2);
     
     % Plot image
     % imagesc(neg_tab); axis image off
@@ -146,18 +145,17 @@ function surface_t_array = txt_to_array(dirpath, idx)
     
     % Check consistency of coordinates
     if xmax < 0
-        assert(abs(round(xmin - xmax)) == b_tab_w, 'Inconsistency in positive tab width')
+        assert(abs(round(xmin - xmax, 1)) == b_tab_w, 'Inconsistency in positive tab width')
     else
-        assert(round(xmax - xmin) == b_tab_w, 'Inconsistency in positive tab width')
+        assert(round(xmax - xmin, 1) == b_tab_w, 'Inconsistency in positive tab width')
     end
-    assert(round(ymax - ymin) == b_tab_l, 'Inconsistency in positive tab length')
+    assert(round(ymax - ymin, 1) == b_tab_l, 'Inconsistency in positive tab length')
     
     % Create mesh grid
     [xq, yq] = meshgrid(round(xmin):round(xmax), round(ymin):round(ymax));
     
     % Interpolate 2D scattered data
     pos_tab = griddata(x_coords, y_coords, T_vals, xq, yq, "nearest");
-    pos_tab = rot90(pos_tab, 2);
     
     % Plot image
     % imagesc(pos_tab); axis image off
@@ -167,13 +165,22 @@ function surface_t_array = txt_to_array(dirpath, idx)
     [b_tab_l, b_tab_w] = size(pos_tab);
     
     % Create image of battery
-    b_full = T_amb * ones(b_body_l + b_tab_l, b_body_w);
-    b_full((b_tab_l + 1):end, :) = b_body;
-    b_full(1:b_tab_l, (b_tab_off + 1):(b_tab_w + b_tab_off)) = neg_tab;
-    b_full(1:b_tab_l, (b_body_w - b_tab_w - b_tab_off + 1):(end - b_tab_off)) = pos_tab;
-    
+    if strcmp(batt_type, 'Lin')
+        b_full = T_amb * ones(b_body_l + b_tab_l, b_body_w);
+        b_full((b_tab_l + 1):end, :) = rot90(b_body, 2);
+        b_full(1:b_tab_l, (b_tab_off + 1):(b_tab_w + b_tab_off)) = rot90(neg_tab, 2);
+        b_full(1:b_tab_l, (b_body_w - b_tab_w - b_tab_off + 1):(end - b_tab_off)) = rot90(pos_tab, 2);
+    elseif strcmp(batt_type, 'Energetic')
+        b_full = T_amb * ones(b_body_l + 2 * b_tab_l, b_body_w);
+        b_full((b_tab_l + 1):(b_tab_l + b_body_l), :) = flipud(b_body);
+        b_full((b_tab_l + b_body_l + 1):end, (b_body_w - b_tab_w - round(b_tab_off) + 1):(end - round(b_tab_off))) = flipud(neg_tab);
+        b_full(1:b_tab_l, (b_body_w - b_tab_w - round(b_tab_off) + 1):(end - round(b_tab_off))) = flipud(pos_tab);
+    else
+        error('"batt_type" argument should be either "Energetic" or "Lin"')
+    end
+
     % Show image
-    % imagesc(b_full); axis off image; colobar
+    % imagesc(b_full); axis off image; colorbar
     
     % Pad image
     % b_full = padarray(b_full, [1 1], T_amb, 'both');

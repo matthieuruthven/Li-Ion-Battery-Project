@@ -4,7 +4,7 @@ function surface_t_array = txt_to_array(dirpath, idx, batt_type)
     % save the array as a MAT file
     %
     % Author: Matthieu Ruthven (matthieu.ruthven@uni.lu)
-    % Last modified: 20th March 2024
+    % Last modified: 25th March 2024
     %
     % Input arguments:
     % 1) dirpath (string): path to folder containing data from battery surface
@@ -88,7 +88,7 @@ function surface_t_array = txt_to_array(dirpath, idx, batt_type)
     
     % Interpolate 2D scattered data
     b_body = griddata(x_coords, y_coords, T_vals, xq, yq, "nearest");
-    
+
     % Plot image
     % imagesc(b_body); axis image off
     
@@ -167,9 +167,9 @@ function surface_t_array = txt_to_array(dirpath, idx, batt_type)
     % Create image of battery
     if strcmp(batt_type, 'Lin')
         b_full = T_amb * ones(b_body_l + b_tab_l, b_body_w);
-        b_full((b_tab_l + 1):end, :) = rot90(b_body, 2);
-        b_full(1:b_tab_l, (b_tab_off + 1):(b_tab_w + b_tab_off)) = rot90(neg_tab, 2);
-        b_full(1:b_tab_l, (b_body_w - b_tab_w - b_tab_off + 1):(end - b_tab_off)) = rot90(pos_tab, 2);
+        b_full((b_tab_l + 1):end, :) = flipud(b_body);
+        b_full(1:b_tab_l, (b_tab_off + 1):(b_tab_w + b_tab_off)) = flipud(neg_tab);
+        b_full(1:b_tab_l, (b_body_w - b_tab_w - b_tab_off + 1):(end - b_tab_off)) = flipud(pos_tab);
     elseif strcmp(batt_type, 'Energetic')
         b_full = T_amb * ones(b_body_l + 2 * b_tab_l, b_body_w);
         b_full((b_tab_l + 1):(b_tab_l + b_body_l), :) = flipud(b_body);

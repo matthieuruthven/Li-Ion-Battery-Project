@@ -36,7 +36,7 @@ Where:
 - **sim_type** (string) is *Charge*, *Discharge* or *Square* to generate images of the surface temperature of the pouch cell while it is charging, discharging or cycled using a square wave
 - **sim_time** (integer) is the duration of the simulation in seconds
 - **batt_type** (string) is either *Energetic* or *Lin* to indicate whether simulations using the Energetic or original pouch cell should be performed
-- **anomaly** (string) is either *None*, *Circle*, *Stripe_H* or *Stripe_W* to indicate the spatial anomaly in the battery thermal conductivity
+- **anomaly** (string) is either *None*, *Circle*, *Stripe_H* or *Stripe_W* to indicate the spatial anomaly in the battery heat transfer coefficient
 - **C_rate** (float) is the C-rate at which the pouch cell is (dis)charged
 - **k_in** (float) is the thermal conductivity, *k*, of the pouch cell in W/m/K
 - **h_in** (float) is the heat transfer coefficient, *h*, of the pouch cell in W/m<sup>2</sup>/K
@@ -53,4 +53,4 @@ For example:
 Energetic_Generate_Dataset('Square', 2500, 'Lin', 'None', 4, 1, 1, 1, 'C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project', 100, 1, 0.3, 'default')
 ```
 
-would simulate the square wave cycling of the Lin *et al.* (2022) pouch cell at a C-rate of 4 for 2500 seconds and then generate sythetic images of the surface temperature of the pouch cell every second and save these images in a folder with path *C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project\Lin_C_rate_4_00_T_amb_23_85_h_12_0_k_1_1_Square_SOC_0_3*. The initial SOC of the pouch cell would be 30% and the default values of *k*, *h* and *T<sub>0</sub>* would be used in the simulation. The *k* of the pouch cell would not include any spatial anomaly.
+would simulate the square wave cycling of the Lin *et al.* (2022) pouch cell at a C-rate of 4 for 2500 seconds and then generate sythetic images of the surface temperature of the pouch cell every second and save these images in a folder with path *C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project\Lin_C_rate_4_00_T_amb_23_85_h_12_0_k_1_1_Square_SOC_0_3*. The initial SOC of the pouch cell would be 30% and the default values of *k*, *h* and *T<sub>0</sub>* would be used in the simulation. The *h* of the pouch cell would not include any spatial anomaly.

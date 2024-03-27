@@ -1,4 +1,4 @@
-function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,batt_type,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0,SOC)
+function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,batt_type,anomaly,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0,SOC)
 %
 % Battery_model_energetic.m
 % 
@@ -470,6 +470,59 @@ model.component('comp1').material('mat3').set('groups', {'electrodes' 'Electrode
 model.component('comp1').material('mat3').propertyGroup('def').set('electricconductivity', {'N^2*50[S/m]' '0' '0' '0' '50[S/m]' '0' '0' '0' '50[S/m]'});
 model.component('comp1').material('mat3').propertyGroup('def').set('diffusion', {'Ds' '0' '0' '0' 'Ds' '0' '0' '0' 'Ds'});
 model.component('comp1').material('mat3').propertyGroup('def').set('thermalconductivity', {'10' '0' '0' '0' '10' '0' '0' '0' '10'});
+% NB Commented code below is to introduce a spatial anomaly in thermal
+% conductivity
+% if strcmp(anomaly, 'None')
+%     model.component('comp1').material('mat3').propertyGroup('def').set('thermalconductivity', {'10' '0' '0' '0' '10' '0' '0' '0' '10'});
+% elseif strcmp(anomaly, 'Circle')
+%     % Randomly select centre and radius of circle
+%     y_coord = randi(batt_w) / 1000; % / 1000 to convert from mm to m
+%     z_coord = randi(batt_h) / 1000; % / 1000 to convert from mm to m
+%     c_radius = randi(batt_w) / 1000; % / 1000 to convert from mm to m
+%     % Modify thermal conductivity so that it varies spatially
+%     model.component('comp1').material('mat3').propertyGroup('def').set('thermalconductivity', {sprintf('if(sqrt((y-%.2f)^2+(z-%.2f)^2)<%.2f,%.1f,%.1f)[W/(m*K)]', y_coord, z_coord, c_radius, 100 * keff, keff)});
+%     % Update list of model parameter values
+%     model.param.set('anomaly', anomaly, 'Type of anomaly');
+%     model.param.set('y_coord', [num2str(y_coord) '[m]'], 'y-coordinate of circular anomaly centre');
+%     model.param.set('z_coord', [num2str(z_coord) '[m]'], 'z-coordinate of circular anomaly centre');
+%     model.param.set('c_radius', [num2str(c_radius) '[m]'], 'Radius of circular anomaly');
+% elseif strcmp(anomaly, 'Stripe_W')
+%     % Randomly select stripe starting coordinate and thickness
+%     z_coord = randi(batt_h) / 1000; % / 1000 to convert from mm to m
+%     z_thickness = randi(round(batt_h / 2)) / 1000; % / 1000 to convert from mm to m
+%     % Update list of model parameter values
+%     model.param.set('anomaly', anomaly, 'Type of anomaly');
+%     % Modify thermal conductivity so that it varies spatially
+%     if (z_coord + z_thickness) < batt_h
+%         model.component('comp1').material('mat3').propertyGroup('def').set('thermalconductivity', {sprintf('if(z<%.2f,%.1f,if(z>%.2f,%.1f,%.1f))[W/(m*K)]', z_coord, keff, z_coord + z_thickness, keff, 100 * keff)});
+%         % Update list of model parameter values
+%         model.param.set('z_coord', [num2str(z_coord) '[m]'], 'z-coordinate where anomaly starts');
+%         model.param.set('z_thickness', [num2str(z_thickness) '[m]'], 'Thickness of stripe anomaly');
+%     else
+%         model.component('comp1').material('mat3').propertyGroup('def').set('thermalconductivity', {sprintf('if(z<%.2f,%.1f,if(z>%.2f,%.1f,%.1f))[W/(m*K)]', z_coord - z_thickness, keff, z_coord, keff, 100 * keff)});
+%         % Update list of model parameter values
+%         model.param.set('z_coord', [num2str(z_coord - z_thickness) '[m]'], 'z-coordinate where anomaly starts');
+%         model.param.set('z_thickness', [num2str(z_thickness) '[m]'], 'Thickness of stripe anomaly');
+%     end
+% elseif strcmp(anomaly, 'Stripe_H')
+%     % Randomly select stripe starting coordinate and thickness
+%     y_coord = randi(batt_w) / 1000; % / 1000 to convert from mm to m
+%     y_thickness = randi(round(batt_w / 2)) / 1000; % / 1000 to convert from mm to m
+%     % Update list of model parameter values
+%     model.param.set('anomaly', anomaly, 'Type of anomaly');
+%     % Modify thermal conductivity so that it varies spatially
+%     if (y_coord + y_thickness) < batt_w
+%         model.component('comp1').material('mat3').propertyGroup('def').set('thermalconductivity', {sprintf('if(y<%.2f,%.1f,if(y>%.2f,%.1f,%.1f))[W/(m*K)]', y_coord, keff, y_coord + y_thickness, keff, 100 * keff)});
+%         % Update list of model parameter values
+%         model.param.set('y_coord', [num2str(y_coord) '[m]'], 'y-coordinate where anomaly starts');
+%         model.param.set('y_thickness', [num2str(y_thickness) '[m]'], 'Thickness of stripe anomaly');
+%     else
+%         model.component('comp1').material('mat3').propertyGroup('def').set('thermalconductivity', {sprintf('if(y<%.2f,%.1f,if(y>%.2f,%.1f,%.1f))[W/(m*K)]', y_coord - y_thickness, keff, y_coord, keff, 100 * keff)});
+%         % Update list of model parameter values
+%         model.param.set('y_coord', [num2str(y_coord - y_thickness) '[m]'], 'y-coordinate where anomaly starts');
+%         model.param.set('y_thickness', [num2str(y_thickness) '[m]'], 'Thickness of stripe anomaly');
+%     end
+% end
 model.component('comp1').material('mat3').propertyGroup('def').set('heatcapacity', '1000');
 model.component('comp1').material('mat3').propertyGroup('def').set('density', '3200');
 model.component('comp1').material('mat3').propertyGroup('def').set('T_ref', '318[K]');
@@ -507,6 +560,28 @@ model.component('comp1').material('mat4').set('groups', {'electrodes' 'Electrode
 model.component('comp1').material('mat4').propertyGroup('def').set('diffusion', {'Ds' '0' '0' '0' 'Ds' '0' '0' '0' 'Ds'});
 model.component('comp1').material('mat4').propertyGroup('def').set('electricconductivity', {'N^2*50[S/m]' '0' '0' '0' '50[S/m]' '0' '0' '0' '50[S/m]'});
 model.component('comp1').material('mat4').propertyGroup('def').set('thermalconductivity', {'10' '0' '0' '0' '10' '0' '0' '0' '10'});
+% NB Commented code below is to introduce a spatial anomaly in thermal
+% conductivity
+% if strcmp(anomaly, 'None')
+%     model.component('comp1').material('mat4').propertyGroup('def').set('thermalconductivity', {'10' '0' '0' '0' '10' '0' '0' '0' '10'});
+% elseif strcmp(anomaly, 'Circle')
+%     % Modify thermal conductivity so that it varies spatially
+%     model.component('comp1').material('mat4').propertyGroup('def').set('thermalconductivity', {sprintf('if(sqrt((y-%.2f)^2+(z-%.2f)^2)<%.2f,%.1f,%.1f)[W/(m*K)]', y_coord, z_coord, c_radius, 100 * keff, keff)});
+% elseif strcmp(anomaly, 'Stripe_W')
+%     % Modify thermal conductivity so that it varies spatially
+%     if (z_coord + z_thickness) < batt_h
+%         model.component('comp1').material('mat4').propertyGroup('def').set('thermalconductivity', {sprintf('if(z<%.2f,%.1f,if(z>%.2f,%.1f,%.1f))[W/(m*K)]', z_coord, keff, z_coord + z_thickness, keff, 100 * keff)});
+%     else
+%         model.component('comp1').material('mat4').propertyGroup('def').set('thermalconductivity', {sprintf('if(z<%.2f,%.1f,if(z>%.2f,%.1f,%.1f))[W/(m*K)]', z_coord - z_thickness, keff, z_coord, keff, 100 * keff)});
+%     end
+% elseif strcmp(anomaly, 'Stripe_H')
+%     % Modify thermal conductivity so that it varies spatially
+%     if (y_coord + y_thickness) < batt_w
+%         model.component('comp1').material('mat4').propertyGroup('def').set('thermalconductivity', {sprintf('if(y<%.2f,%.1f,if(y>%.2f,%.1f,%.1f))[W/(m*K)]', y_coord, keff, y_coord + y_thickness, keff, 100 * keff)});
+%     else
+%         model.component('comp1').material('mat4').propertyGroup('def').set('thermalconductivity', {sprintf('if(y<%.2f,%.1f,if(y>%.2f,%.1f,%.1f))[W/(m*K)]', y_coord - y_thickness, keff, y_coord, keff, 100 * keff)});
+%     end
+% end
 model.component('comp1').material('mat4').propertyGroup('def').set('heatcapacity', '1000');
 model.component('comp1').material('mat4').propertyGroup('def').set('density', '3200');
 model.component('comp1').material('mat4').propertyGroup('ElectrodePotential').set('Eeq', '');
@@ -713,7 +788,57 @@ model.component('comp1').physics('ht').feature('solid5').label('Current collecto
 model.component('comp1').physics('ht').feature('hs1').set('Q0', 'liion.Qh');
 model.component('comp1').physics('ht').feature('hs1').set('materialType', 'from_mat');
 model.component('comp1').physics('ht').feature('hf1').set('HeatFluxType', 'ConvectiveHeatFlux');
-model.component('comp1').physics('ht').feature('hf1').set('h', 'ha');
+if strcmp(anomaly, 'None')
+    model.component('comp1').physics('ht').feature('hf1').set('h', 'ha');
+elseif strcmp(anomaly, 'Circle')
+    % Randomly select centre and radius of circle
+    y_coord = randi(batt_w) / 1000; % / 1000 to convert from mm to m
+    z_coord = randi(batt_h) / 1000; % / 1000 to convert from mm to m
+    c_radius = randi(batt_w) / 1000; % / 1000 to convert from mm to m
+    % Modify heat transfer coefficient so that it varies spatially
+    model.component('comp1').physics('ht').feature('hf1').set('h', sprintf('if(sqrt((y-%.2f)^2+(z-%.2f)^2)<%.2f,%.1f,%.1f)[W/(m^2*K)]', y_coord, z_coord, c_radius, 100 * h, h));
+    % Update list of model parameter values
+    model.param.set('anomaly', anomaly, 'Type of anomaly');
+    model.param.set('y_coord', [num2str(y_coord) '[m]'], 'y-coordinate of circular anomaly centre');
+    model.param.set('z_coord', [num2str(z_coord) '[m]'], 'z-coordinate of circular anomaly centre');
+    model.param.set('c_radius', [num2str(c_radius) '[m]'], 'Radius of circular anomaly');
+elseif strcmp(anomaly, 'Stripe_W')
+    % Randomly select stripe starting coordinate and thickness
+    z_coord = randi(batt_h) / 1000; % / 1000 to convert from mm to m
+    z_thickness = randi(round(batt_h / 2)) / 1000; % / 1000 to convert from mm to m
+    % Update list of model parameter values
+    model.param.set('anomaly', anomaly, 'Type of anomaly');
+    % Modify thermal conductivity so that it varies spatially
+    if (z_coord + z_thickness) < batt_h
+        model.component('comp1').physics('ht').feature('hf1').set('h', sprintf('if(z<%.2f,%.1f,if(z>%.2f,%.1f,%.1f))[W/(m^2*K)]', z_coord, h, z_coord + z_thickness, h, 100 * h));
+        % Update list of model parameter values
+        model.param.set('z_coord', [num2str(z_coord) '[m]'], 'z-coordinate where anomaly starts');
+        model.param.set('z_thickness', [num2str(z_thickness) '[m]'], 'Thickness of stripe anomaly');
+    else
+        model.component('comp1').physics('ht').feature('hf1').set('h', sprintf('if(z<%.2f,%.1f,if(z>%.2f,%.1f,%.1f))[W/(m^2*K)]', z_coord - z_thickness, h, z_coord, h, 100 * h));
+        % Update list of model parameter values
+        model.param.set('z_coord', [num2str(z_coord - z_thickness) '[m]'], 'z-coordinate where anomaly starts');
+        model.param.set('z_thickness', [num2str(z_thickness) '[m]'], 'Thickness of stripe anomaly');
+    end
+elseif strcmp(anomaly, 'Stripe_H')
+    % Randomly select stripe starting coordinate and thickness
+    y_coord = randi(batt_w) / 1000; % / 1000 to convert from mm to m
+    y_thickness = randi(round(batt_w / 2)) / 1000; % / 1000 to convert from mm to m
+    % Update list of model parameter values
+    model.param.set('anomaly', anomaly, 'Type of anomaly');
+    % Modify thermal conductivity so that it varies spatially
+    if (y_coord + y_thickness) < batt_w
+        model.component('comp1').physics('ht').feature('hf1').set('h', sprintf('if(y<%.2f,%.1f,if(y>%.2f,%.1f,%.1f))[W/(m^2*K)]', y_coord, h, y_coord + y_thickness, h, 100 * h));
+        % Update list of model parameter values
+        model.param.set('y_coord', [num2str(y_coord) '[m]'], 'y-coordinate where anomaly starts');
+        model.param.set('y_thickness', [num2str(y_thickness) '[m]'], 'Thickness of stripe anomaly');
+    else
+        model.component('comp1').physics('ht').feature('hf1').set('h', sprintf('if(y<%.2f,%.1f,if(y>%.2f,%.1f,%.1f))[W/(m^2*K)]', y_coord - y_thickness, h, y_coord, h, 100 * h));
+        % Update list of model parameter values
+        model.param.set('y_coord', [num2str(y_coord - y_thickness) '[m]'], 'y-coordinate where anomaly starts');
+        model.param.set('y_thickness', [num2str(y_thickness) '[m]'], 'Thickness of stripe anomaly');
+    end
+end
 model.component('comp1').physics('ht').feature('hf1').set('Text', 'T0');
 model.component('comp1').physics('ht').feature('hf1').set('materialType', 'from_mat');
 
@@ -744,6 +869,13 @@ model.component('comp1').physics('liion').feature('ece1').set('minput_temperatur
 model.component('comp1').physics('liion').feature('ece2').set('minput_temperature_src', 'root.comp1.T');
 model.component('comp1').physics('ht').feature('solid1').set('minput_strainreferencetemperature_src', 'userdef');
 model.component('comp1').physics('ht').feature('solid6').set('k_mat', 'userdef');
+% NB Commented code below is to introduce a spatial anomaly in thermal
+% conductivity
+% if strcmp(anomaly, 'None')
+%     model.component('comp1').physics('ht').feature('solid6').set('k_mat', 'userdef');
+% else
+%     model.component('comp1').physics('ht').feature('solid6').set('k_mat', 'from_mat');
+% end
 model.component('comp1').physics('ht').feature('solid6').set('rho_mat', 'userdef');
 model.component('comp1').physics('ht').feature('solid6').set('Cp_mat', 'userdef');
 model.component('comp1').physics('ht').feature('solid6').set('minput_strainreferencetemperature_src', 'userdef');
@@ -1387,7 +1519,7 @@ if strcmp(batt_type, 'Lin')
         tmp_t_vals = txt_to_array(dirpath, idx, batt_type);
         surface_t_array = cat(3, surface_t_array, tmp_t_vals);
     end
-    elseif strcmp(batt_type, 'Energetic')
+elseif strcmp(batt_type, 'Energetic')
     for idx = 1:max_step_id
         model.result.dataset('surf2').selection.set([1]);
         model.result('pg27').setIndex('looplevel', idx, 0);
@@ -1414,5 +1546,43 @@ else
 end
 % Save surface_t_array
 save(fullfile(dirpath, 'Surface_T.mat'), 'surface_t_array')
+
+% If there is an anomaly, save an image of the thermal conductivity
+% distribution
+if ~strcmp(anomaly, 'None')
+    % Create dataset (NB code below commented out as only required when 
+    % introducing a spatial anomaly in the thermal conductivity)
+    % model.result.dataset.create('cpl1', 'CutPlane');
+    % model.result.dataset('cpl1').label('Pos Ele Midplane');
+    % model.result.dataset('cpl1').set('quickx', 'L_pos_cc+L_pos/2');
+    if strcmp(batt_type, 'Lin')
+        model.result.dataset('surf2').selection.set([6 10 43]);
+    else
+        model.result.dataset('surf2').selection.set([1 5 32]);
+    end
+    % Create 2D plot group
+    model.result.create('pg28', 'PlotGroup2D');
+    model.result('pg28').run;
+    % model.result('pg28').label('Thermal Conductivity');
+    model.result('pg28').label('Heat Transfer Coefficient');
+    % model.result('pg28').set('data', 'cpl1');
+    model.result('pg28').set('data', 'surf2');
+    model.result('pg28').set('titletype', 'none');
+    model.result('pg28').set('view', 'view10');
+    model.result('pg28').set('edges', false);
+    model.result('pg28').set('showlegends', false);
+    model.result('pg28').create('surf1', 'Surface');
+    model.result('pg28').feature('surf1').set('expr', 'ht.hf1.h');
+    model.result('pg28').run;
+    model.view('view10').set('showgrid', false);
+    model.result.export('anim2').set('plotgroup', 'pg28');
+    % model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Thermal_Conductivity_.%s', es.img_type))');
+    model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Heat_Transfer_Coefficient_.%s', es.img_type))');
+    model.result.export('anim2').set('looplevelindices', sprintf('1,%d', idx));
+    model.result.export('anim2').run;
+
+    % Convert one of the images to a binary mask
+    Anomaly_Img_to_Mask_Conversion(fullfile(dirpath, sprintf('Heat_Transfer_Coefficient_1.%s', es.img_type)))
+end
 
 out = model;

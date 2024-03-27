@@ -1,4 +1,4 @@
-function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0,SOC)
+function out = Battery_model_energetic(sim_type,sq_wave_period,img_syn_int,batt_type,C_rate,dirpath,tf,T0,Cpel,keff,h,ku,kappa,alfa_ka,i0ref,Ei0,Ds,DS,U0,SOC)
 %
 % Battery_model_energetic.m
 % 
@@ -751,41 +751,43 @@ model.component('comp1').physics('ht').feature('solid4').set('k_mat', 'userdef')
 model.component('comp1').physics('ht').feature('solid4').set('rho_mat', 'userdef');
 model.component('comp1').physics('ht').feature('solid4').set('Cp_mat', 'userdef');
 
-% % To change battery to Energetic battery
-% % Remove geometry that is not required
-% model.component('comp1').geom('geom1').feature.remove('arr1');
-% model.component('comp1').geom('geom1').feature.remove('blk4');
-% model.component('comp1').geom('geom1').feature.remove('blk3');
-% model.component('comp1').geom('geom1').feature.remove('wp2');
-% model.component('comp1').geom('geom1').feature.remove('wp3');
-% model.component('comp1').geom('geom1').feature.remove('ext2');
-% model.component('comp1').geom('geom1').run('fin');
-% % Remove material that is not required
-% model.component('comp1').material.remove('mat6');
-% % Remove parameters that are not required and update other parameters
-% model.param.remove('H_bar');
-% model.param.remove('L_bar');
-% model.param.set('I_1C', 'Q_cell/1[h]/W_tab/L_tab');
-% model.param.set('W_cell', '102 [mm]');
-% model.param.set('H_cell', '309 [mm]');
-% model.param.set('L_tab', '0.35 [mm]');
-% model.param.set('H_tab', '31.5 [mm]');
-% model.param.set('W_tab', '45 [mm]');
-% model.param.set('Itab', '10.5 [mm]');
-% model.param.set('U0', '3.65[V]');
-% model.param.set('Q_cell', '40[Ah]');
-% % Remove components that are not required
-% model.component('comp1').selection.remove('sel12');
-% model.component('comp1').selection('sel9').set([8]);
-% model.component('comp1').selection('sel8').set([34]);
-% % Modify battery configuration
-% model.component('comp1').geom('geom1').feature('blk2').setIndex('pos', '-H_tab', 2);
-% model.component('comp1').geom('geom1').run('blk2');
-% model.component('comp1').geom('geom1').feature('blk2').setIndex('pos', 'Itab', 1);
-% model.component('comp1').geom('geom1').run('blk2');
-% model.component('comp1').geom('geom1').run;
-% model.component('comp1').physics('liion').feature('egnd1').selection.set([34]);
-% model.component('comp1').geom('geom1').run('fin');
+% If required, change battery configuration and dimensions to Energetic 
+% battery
+if strcmp(batt_type, 'Energetic')
+    % Remove geometry that is not required and modify battery configuration
+    model.component('comp1').geom('geom1').feature.remove('arr1');
+    model.component('comp1').geom('geom1').feature.remove('blk4');
+    model.component('comp1').geom('geom1').feature.remove('blk3');
+    model.component('comp1').geom('geom1').feature.remove('wp2');
+    model.component('comp1').geom('geom1').feature.remove('wp3');
+    model.component('comp1').geom('geom1').feature.remove('ext2');
+    model.component('comp1').geom('geom1').run('blk2');
+    model.component('comp1').geom('geom1').run;
+    model.component('comp1').geom('geom1').feature('blk2').setIndex('pos', 'Itab', 1);
+    model.component('comp1').geom('geom1').feature('blk2').setIndex('pos', '-H_tab', 2);
+    model.component('comp1').geom('geom1').run('blk2');
+    % Remove parameters that are not required and update other parameters
+    model.param.remove('H_bar');
+    model.param.remove('L_bar');
+    model.param.set('I_1C', 'Q_cell/1[h]/W_tab/L_tab');
+    model.param.set('W_cell', '102 [mm]');
+    model.param.set('H_cell', '309 [mm]');
+    model.param.set('L_tab', '0.35 [mm]');
+    model.param.set('H_tab', '31.5 [mm]');
+    model.param.set('W_tab', '45 [mm]');
+    model.param.set('Itab', '10.5 [mm]');
+    model.component('comp1').geom('geom1').run('fin');
+    % Remove materials that are not required
+    model.component('comp1').material.remove('mat6');
+    % Remove components that are not required
+    model.component('comp1').selection.remove('sel12');
+    model.component('comp1').selection('sel9').set([8]);
+    model.component('comp1').selection('sel8').set([34]);
+    % Modify battery configuration
+    model.component('comp1').physics('liion').feature('ec1').selection.set([8]);
+    model.component('comp1').physics('liion').feature('egnd1').selection.set([34]);
+    model.component('comp1').geom('geom1').run('fin');
+end
 
 model.study.create('std1');
 model.study('std1').create('time', 'Transient');
@@ -1141,13 +1143,31 @@ es.colour_table = 'Rainbow';
 % es.colour_table_min = 23;
 % es.colour_table_max = 30;
 es.font_size = 9;
+model.param.set('img_w_pix', es.img_w_pix, 'Width in pixels of exported images/video frames');
+model.param.set('img_h_pix', es.img_h_pix, 'Height in pixels of exported images/video frames');
+model.param.set('img_type', es.img_type, 'Type of image exported');
+model.param.set('video_type', es.video_type, 'Type of video exported');
+if strcmp(es.video_type, 'avi')
+    es.avi_quality = 1;
+    model.param.set('avi_quality', es.avi_quality, 'Quality of exported AVI video');
+end
+model.param.set('video_fps', es.video_fps, 'Frames per second of exported video');
+model.param.set('colour_table', es.colour_table, 'Colour table in exported image/video');
+% model.param.set('colour_table_min', es.colour_table_min, 'Minimum temperature in colour table');
+% model.param.set('colour_table_max', es.colour_table_max, 'Maximum temperature in colour table');
+model.param.set('font_size', es.font_size, 'Font size in exported video');
 
-% Save these values
-writestruct(es, fullfile(dirpath, 'Export_Parameter_Values.json'))
+% Save battery model and export parameters
+model.param.saveFile(fullfile(dirpath, 'Model_Parameter_Values.txt'));
 
 model.result.dataset.create('surf2', 'Surface');
 model.result.dataset('surf2').label('Positive CC');
-model.result.dataset('surf2').selection.set([6 10 43]);
+model.result.dataset('surf2').set('param', 'yz');
+if strcmp(batt_type, 'Lin')
+    model.result.dataset('surf2').selection.set([6 10 43]);
+else
+    model.result.dataset('surf2').selection.set([1 5 32]);
+end
 model.result.create('pg27', 'PlotGroup2D');
 model.result('pg27').run;
 model.result('pg27').label('Positive CC Surface T');
@@ -1170,6 +1190,21 @@ model.result('pg27').feature('surf1').set('colortable', es.colour_table);
 model.result('pg27').run;
 
 model.view('view10').set('showgrid', false);
+if strcmp(batt_type, 'Lin')
+    model.view('view10').axis().set('xmin', -50);
+    model.view('view10').axis().set('xmax', 200);
+    model.view('view10').axis().set('ymin', 15.77869);
+    model.view('view10').axis().set('ymax', 209.22131);
+elseif strcmp(batt_type, 'Energetic')
+    model.view('view10').axis().set('xmin', -180.19104);
+    model.view('view10').axis().set('xmax', 262.19104);
+    model.view('view10').axis().set('ymin', -18.46411);
+    model.view('view10').axis().set('ymax', 327.46417);
+end
+
+% Set model view
+model.result('pg27').set('view', 'view10');
+model.result('pg27').run;
 
 % Export average state of charge (SOC) as TXT file
 model.result.export.create('plot3', 'Plot');
@@ -1259,22 +1294,22 @@ model.result.export('anim2').set('fps', es.video_fps);
 model.result.export('anim2').set('options2d', true);
 model.result.export('anim2').run;
 
-% Export greyscale video with labels
-model.result('pg27').feature('surf1').set('colortable', 'GrayScale');
-model.result('pg27').run;
-model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Labelled_Grayscale.%s', es.video_type)));
-model.result.export('anim2').run;
+% % Export greyscale video with labels
+% model.result('pg27').feature('surf1').set('colortable', 'GrayScale');
+% model.result('pg27').run;
+% model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Labelled_Grayscale.%s', es.video_type)));
+% model.result.export('anim2').run;
 
 % Export greyscale video without labels
 model.result('pg27').set('titletype', 'none');
 model.result('pg27').run;
 model.result.export('anim2').set('options2d', 'off');
-model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Unlabelled_Grayscale.%s', es.video_type)));
-model.result.export('anim2').run;
+% model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Unlabelled_Grayscale.%s', es.video_type)));
+% model.result.export('anim2').run;
 
 % Export RGB video without labels
-model.result('pg27').feature('surf1').set('colortable', es.colour_table);
-model.result('pg27').run;
+% model.result('pg27').feature('surf1').set('colortable', es.colour_table);
+% model.result('pg27').run;
 model.result.export('anim2').set(sprintf('%sfilename', es.video_type), fullfile(dirpath, sprintf('Surface_T_Unlabelled.%s', es.video_type)));
 model.result.export('anim2').run;
 
@@ -1284,10 +1319,10 @@ model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Sur
 model.result.export('anim2').run;
 
 % Export greyscale images (3-channel)
-model.result('pg27').feature('surf1').set('colortable', 'GrayScale');
-model.result('pg27').run;
-model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Surface_T_Grayscale_.%s', es.img_type)));
-model.result.export('anim2').run;
+% model.result('pg27').feature('surf1').set('colortable', 'GrayScale');
+% model.result('pg27').run;
+% model.result.export('anim2').set('imagefilename', fullfile(dirpath, sprintf('Surface_T_Grayscale_.%s', es.img_type)));
+% model.result.export('anim2').run;
 
 % Ensure zero padding is consistent in file name
 zero_padding = numel(num2str(max_step_id));
@@ -1296,18 +1331,18 @@ if zero_padding ~= 4
     for idx = 1:max_step_id
         if zero_padding == 3
             src_filepath = fullfile(dirpath, sprintf('Surface_T_%03d.%s', idx, es.img_type));
-            other_src_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%03d.%s', idx, es.img_type));
+            % other_src_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%03d.%s', idx, es.img_type));
         elseif zero_padding == 2
             src_filepath = fullfile(dirpath, sprintf('Surface_T_%02d.%s', idx, es.img_type));
-            other_src_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%02d.%s', idx, es.img_type));
+            % other_src_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%02d.%s', idx, es.img_type));
         else
             src_filepath = fullfile(dirpath, sprintf('Surface_T_%d.%s', idx, es.img_type));
-            other_src_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%d.%s', idx, es.img_type));
+            % other_src_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%d.%s', idx, es.img_type));
         end
         tgt_filepath = fullfile(dirpath, sprintf('Surface_T_%04d.%s', idx, es.img_type));
         movefile(src_filepath, tgt_filepath)
-        tgt_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%04d.%s', idx, es.img_type));
-        movefile(other_src_filepath, tgt_filepath)
+        % tgt_filepath = fullfile(dirpath, sprintf('Surface_T_Grayscale_%04d.%s', idx, es.img_type));
+        % movefile(other_src_filepath, tgt_filepath)
     end
 end
 
@@ -1330,26 +1365,52 @@ end
 % Export temperature distributions as TXT files
 surface_t_array = [];
 model.result.export.create('plot2', 'Plot');
-for idx = 1:max_step_id
-    model.result.dataset('surf2').selection.set([6]);
-    model.result('pg27').setIndex('looplevel', idx, 0);
-    model.result('pg27').run;
-    model.result.export('plot2').label('Positive CC Surface T Values');
-    model.result.export('plot2').set('plotgroup', 'pg27');
-    model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Battery_%04d.txt', idx)));
-    model.result.export('plot2').set('header', false);
-    model.result.export('plot2').run;
-    model.result.dataset('surf2').selection.set([10]);
-    model.result('pg27').run;
-    model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Neg_Tab_%04d.txt', idx)));
-    model.result.export('plot2').run;
-    model.result.dataset('surf2').selection.set([43]);
-    model.result('pg27').run;
-    model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Pos_Tab_%04d.txt', idx)));
-    model.result.export('plot2').run;
-    % Create single array of temperature values
-    tmp_t_vals = txt_to_array(dirpath, idx);
-    surface_t_array = cat(3, surface_t_array, tmp_t_vals);
+if strcmp(batt_type, 'Lin')
+    for idx = 1:max_step_id
+        model.result.dataset('surf2').selection.set([6]);
+        model.result('pg27').setIndex('looplevel', idx, 0);
+        model.result('pg27').run;
+        model.result.export('plot2').label('Positive CC Surface T Values');
+        model.result.export('plot2').set('plotgroup', 'pg27');
+        model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Battery_%04d.txt', idx)));
+        model.result.export('plot2').set('header', false);
+        model.result.export('plot2').run;
+        model.result.dataset('surf2').selection.set([10]);
+        model.result('pg27').run;
+        model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Neg_Tab_%04d.txt', idx)));
+        model.result.export('plot2').run;
+        model.result.dataset('surf2').selection.set([43]);
+        model.result('pg27').run;
+        model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Pos_Tab_%04d.txt', idx)));
+        model.result.export('plot2').run;
+        % Create single array of temperature values
+        tmp_t_vals = txt_to_array(dirpath, idx, batt_type);
+        surface_t_array = cat(3, surface_t_array, tmp_t_vals);
+    end
+    elseif strcmp(batt_type, 'Energetic')
+    for idx = 1:max_step_id
+        model.result.dataset('surf2').selection.set([1]);
+        model.result('pg27').setIndex('looplevel', idx, 0);
+        model.result('pg27').run;
+        model.result.export('plot2').label('Positive CC Surface T Values');
+        model.result.export('plot2').set('plotgroup', 'pg27');
+        model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Battery_%04d.txt', idx)));
+        model.result.export('plot2').set('header', false);
+        model.result.export('plot2').run;
+        model.result.dataset('surf2').selection.set([32]);
+        model.result('pg27').run;
+        model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Neg_Tab_%04d.txt', idx)));
+        model.result.export('plot2').run;
+        model.result.dataset('surf2').selection.set([5]);
+        model.result('pg27').run;
+        model.result.export('plot2').set('filename', fullfile(tmp_dirpath, sprintf('Surface_T_Pos_Tab_%04d.txt', idx)));
+        model.result.export('plot2').run;
+        % Create single array of temperature values
+        tmp_t_vals = txt_to_array(dirpath, idx, batt_type);
+        surface_t_array = cat(3, surface_t_array, tmp_t_vals);
+    end
+else
+    error('"batt_type" argument should be either "Energetic" or "Lin"')
 end
 % Save surface_t_array
 save(fullfile(dirpath, 'Surface_T.mat'), 'surface_t_array')

@@ -7,13 +7,14 @@ This repository contains the MATLAB code to generate synthetic thermal images of
 ### Software
 
 - COMSOL Multiphysics 6.1 with the Battery Design Module and LiveLink for MATLAB
-- MATLAB R2023b
+- MATLAB R2023b with the Image Processing Toolbox
 
 ### Code
 
 - Energetic_Generate_Dataset.m
 - Battery_model_energetic.m
 - txt_to_array.m
+- Anomaly_Img_to_Mask_Conversion.m
 
 ## Instructions to generate synthetic thermal images
 
@@ -54,3 +55,44 @@ Energetic_Generate_Dataset('Square', 2500, 'Lin', 'None', 4, 1, 1, 1, 'C:\Users\
 ```
 
 would simulate the square wave cycling of the Lin *et al.* (2022) pouch cell at a C-rate of 4 for 2500 seconds and then generate sythetic images of the surface temperature of the pouch cell every second and save these images in a folder with path *C:\Users\matthieu.ruthven\Documents\Li-Ion-Battery-Project\Lin_C_rate_4_00_T_amb_23_85_h_12_0_k_1_1_Square_SOC_0_3*. The initial SOC of the pouch cell would be 30% and the default values of *k*, *h* and *T<sub>0</sub>* would be used in the simulation. The *h* of the pouch cell would not include any spatial anomaly.
+
+## Summary of generated data
+
+Running the `Energetic_Generate_Dataset` function will generate the following data:
+
+```bash
+Lin_C_rate_4_00_T_amb_23_85_h_12_0_k_1_1_Square_SOC_0_3/
+┣ Raw_Surface_T/
+┃  ┣ Surface_T_Battery_0001.txt      # Surface temperature in degrees Centigrade (at time point 1) at each node in battery mesh
+┃  ┣ Surface_T_Neg_Tab_0001.txt      # Surface temperature in degrees Centigrade (at time point 1) at each node in negative tab mesh
+┃  ┣ Surface_T_Pos_Tab_0001.txt      # Surface temperature in degrees Centigrade (at time point 1) at each node in positive tab mesh
+┃  ┣ Surface_T_Battery_0002.txt      # Surface temperature in degrees Centigrade (at time point 2) at each node in battery mesh
+┃  ┣ Surface_T_Neg_Tab_0002.txt      # Surface temperature in degrees Centigrade (at time point 2) at each node in negative tab mesh
+┃  ┣ Surface_T_Pos_Tab_0002.txt      # Surface temperature in degrees Centigrade (at time point 2) at each node in positive tab mesh
+┃  ┗ ...
+┣ Average_Electrode_SOC.txt          # Average state of charge in negative and positive electrode at each time point
+┣ Model_Parameter_Values.txt         # Values of parameters of computational model of battery, and parameters of exported images
+┣ Surface_T.mat                      # Array of all surface temperatures in TXT files in Raw_Surface_T folder
+┣ Surface_T_0001.png                 # Surface temperature of battery at time point 1
+┣ Surface_T_0002.png                 # Surface temperature of battery at time point 2
+┣ ...
+┣ Surface_T_Labelled.gif             # Surface temperature distribution of battery at each time point, including labels
+┗ Surface_T_Unlabelled.gif           # Surface temperature distribution of battery at each time point, not including labels
+```
+
+If **anomaly** is *Circle*, *Stripe_H* or *Stripe_W*, the function will also generate the following data:
+```bash
+Lin_C_rate_4_00_T_amb_23_85_h_12_0_k_1_1_Square_SOC_0_3/
+┣ Heat_Transfer_Coefficient_1.png          # Distribution of heat transfer coefficient values in battery
+┣ Heat_Transfer_Coefficient_2.png          # Distribution of heat transfer coefficient values in battery
+┗ Heat_Transfer_Coefficient_Anomaly.png    # Binary mask showing region where heat transfer coefficient is anomalous
+```
+
+## Key limitation of binary mask conversion code
+
+Two key assumptions made by the code to create a binary mask showing the region where *h* is anomalous are:
+
+1. The largest region in the image (in terms of the number of pixels with the same value) is the background
+2. The second largest region is the part of the battery where the transfer heat coefficient is **NOT** anomalous
+
+The second assumption is not met when the anomalous region is particularly large. Consequently, the binary mask created is not of the anomalous region. This is a key limitation of the code.
